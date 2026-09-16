@@ -23,12 +23,14 @@ This is a **drill yard**, not a tutorial dump. The app under test is deliberatel
 | `cache:` | `actions/cache` or setup-action cache |
 | `include:` / templates | reusable workflows / composite actions |
 | protected environments | Environments + protection rules (UI) |
+| CI variables / WIF | Secrets + OIDC (`id-token`) — see `docs/secrets-and-oidc.md` |
 
 ## What's already here
 
 - `.github/workflows/ci.yml` — push/PR workflow with a **job matrix** (two Python versions) and a deliberate fail path.
 - `src/hello.py` + `tests/test_hello.py` — minimal pytest target.
 - `CHALLENGES.md` — progressive drills with acceptance criteria.
+- `docs/secrets-and-oidc.md` — secrets/OIDC notes + staging dry-run gap to fill.
 
 ### The intentional failure
 

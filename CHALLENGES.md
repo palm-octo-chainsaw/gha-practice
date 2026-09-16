@@ -88,8 +88,20 @@ Write `docs/gitlab-to-actions.md` with:
 
 ---
 
+## 6. Secrets / OIDC notes + staging dry-run
+
+**Task:** Follow [`docs/secrets-and-oidc.md`](./docs/secrets-and-oidc.md). Add a mocked `deploy-staging-dry-run` job (no real cloud calls) and fill in the OIDC sketch.
+
+**Acceptance criteria:**
+- [ ] Dry-run job runs after tests and uses an Environment
+- [ ] Doc gaps filled with your own notes (no real secrets committed)
+- [ ] You can explain when you'd prefer OIDC over a long-lived key
+
+---
+
 ## Stretch (optional)
 
 - Add `concurrency:` so a new push cancels an in-flight run on the same branch
 - Add a workflow_dispatch input that chooses Python version
 - Fail the job if coverage drops below a threshold (tiny coverage is fine)
+- Document required status checks + branch protection for `main` (UI steps only)
