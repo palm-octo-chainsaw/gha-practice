@@ -25,6 +25,8 @@ This is a **drill yard**, not a tutorial dump. The app under test is deliberatel
 | protected environments | Environments + protection rules (UI) |
 | CI variables / WIF | Secrets + OIDC (`id-token`) — see `docs/secrets-and-oidc.md` |
 
+**Path filters (Challenge 1):** `on.push.paths` + `on.pull_request.paths` = `rules: - changes: [src/**, tests/**, .github/workflows/**]` — a docs-only commit matches nothing, so no run is created at all (GitLab would list a skipped pipeline; GitHub lists nothing). Evidence for both halves: [`docs/path-filters-proof.md`](./docs/path-filters-proof.md).
+
 ## What's already here
 
 - `.github/workflows/ci.yml` — push/PR workflow with a **job matrix** (two Python versions) and a deliberate fail path.

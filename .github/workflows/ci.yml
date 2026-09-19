@@ -6,15 +6,20 @@ on:
     paths:
       - "src/**"
       - "tests/**"
-      - ".github/workflows/ci.yml"
+      - ".github/workflows/**"
   pull_request:
-    branches: [main, "feature/*"]
+    branches: [main]
     paths:
       - "src/**"
       - "tests/**"
-      - ".github/workflows/ci.yml"
+      - ".github/workflows/**"
 
-# Challenge 1 will teach you to narrow this with paths / if conditions.
+# GitLab mapping: the `on.*.paths` lists above are this repo's `rules: - changes: [src/**, tests/**, .github/workflows/**]` — docs-only pushes match nothing, so the pipeline never starts.
+#
+# Consequence: a commit touching only *.md or docs/** produces NO workflow run at all
+# (GitHub shows no entry, unlike GitLab which shows a skipped/ignored pipeline).
+# Proof of both halves lives in docs/path-filters-proof.md.
+#
 # Challenge 4 will teach you to cache pip correctly.
 
 jobs:
