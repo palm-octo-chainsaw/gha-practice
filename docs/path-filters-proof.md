@@ -57,3 +57,12 @@ git log -1 --format=%H   # this SHA appears nowhere in the list above
 - [x] Push a docs-only commit: no run is created (Half 2)
 - [x] Push a code change: heavy job runs (run `35409277560`, green — Half 1)
 - [x] README + workflow comment explain the mapping to GitLab `rules:changes`
+
+---
+
+## Result of Half 2 (recorded on branch `docs/path-filter-skip-proof`)
+
+This paragraph is the docs-only change. Nothing else in the commit; `docs/**`
+matches none of `src/**`, `tests/**`, `.github/workflows/**`. See PR #3 — its
+Checks section is empty and `gh run list --branch docs/path-filter-skip-proof`
+lists no run for this commit's SHA.
