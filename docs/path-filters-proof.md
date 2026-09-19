@@ -1,47 +1,59 @@
-# Challenge 1 evidence: path filters behave like GitLab `rules:changes`
+# Challenge 1 evidence: path filters == GitLab `rules:changes`
 
 ## The mapping (one line)
 
 `on.push.paths` + `on.pull_request.paths` in `.github/workflows/ci.yml` ==
 `rules: - changes: [src/**, tests/**, .github/workflows/**]` in `.gitlab-ci.yml`.
 
-Difference worth internalizing: GitLab evaluates `rules:changes` *after* creating a
-pipeline, so a non-matching change shows up as a skipped/ignored pipeline. GitHub
-evaluates `on.*.paths` *before* creating a run, so a non-matching change produces
-**no run at all** — the Actions tab simply gains no entry for that commit.
+Two differences worth internalizing, both learned the hard way while producing the
+evidence below:
+
+1. **Skipped vs. never created.** GitLab creates the pipeline and then marks it
+   skipped/ignored. GitHub evaluates `on.*.paths` *before* creating anything, so a
+   non-matching change produces **no run at all** — the Actions tab and the PR's
+   Checks section simply stay empty for that commit.
+2. **`pull_request` filters the whole PR diff, not the push.** `on.push.paths`
+   looks at the files in the pushed commits, but `on.pull_request.paths` looks at
+   `base...head` for the entire PR. So a docs-only *commit* pushed onto a PR that
+   already contains `src/` changes still triggers a run. A docs-only *PR* does not.
+   GitLab's `rules:changes` on a merge-request pipeline behaves the same way; the
+   trap is assuming the filter is per-push in both cases.
 
 ## Half 1 — code/workflow change: the matrix job runs
 
-- Commit: `eb8cb8c` (`docs: map path filters to GitLab rules:changes`) — touched
-  `.github/workflows/ci.yml`, which matches `.github/workflows/**`.
-- Run: https://github.com/palm-octo-chainsaw/gha-practice/actions/runs/35409277560 — `success`
-  (both `test (py3.11)` and `test (py3.12)` legs, plus `summarize`).
-
-Earlier code-path evidence on the same branch:
-https://github.com/palm-octo-chainsaw/gha-practice/actions/runs/35408188604 (commit `d880039`, `src`/workflow change, green).
+- Commit `eb8cb8c` touched `.github/workflows/ci.yml` → matches `.github/workflows/**`.
+- Run: https://github.com/palm-octo-chainsaw/gha-practice/actions/runs/35409277560 — **success**
+  (`test (py3.11)`, `test (py3.12)`, `summarize`).
+- Earlier code-path run on the same branch:
+  https://github.com/palm-octo-chainsaw/gha-practice/actions/runs/35408188604 (commit `d880039`, green).
 
 ## Half 2 — docs-only change: no run is created
 
-- Commit: the one that adds this file — touches `docs/**` only, matching none of the
-  three path globs.
-- Expected and observed: `gh run list --branch feature/fine-grain-workflow-run` shows
-  **no new run** whose `headSha` equals that commit. The newest run stays `35409277560`.
+Recorded in PR #3 (`docs/path-filter-skip-proof`), branched off `main` *after* the
+path filters landed there, carrying a single `docs/**` file and nothing else.
+See the "Result" section appended to that PR / this file on that branch.
 
-Reproduce it yourself:
+Two failed attempts are kept here because they are the actual lesson:
+
+| Attempt | Why it still ran |
+|---------|------------------|
+| Docs-only commit pushed onto PR #2 (run `35409327786`) | `pull_request` evaluates the full PR diff, which contains `src/` + workflow changes. |
+| Docs-only PR #3 off the pre-merge `main` (run `35409404167`) | `main`'s `ci.yml` had no `paths:` block yet; the filter only existed on the feature branch. |
+
+Reproduce it once the filters are on the default branch:
 
 ```bash
-# before
-gh run list --branch "$(git branch --show-current)" --limit 3 --json databaseId,headSha,conclusion
+git switch -c docs/try main
+echo "note" >> docs/secrets-and-oidc.md
+git commit -am "docs: touch" && git push -u origin docs/try
+gh pr create --base main --fill
 
-git commit --allow-empty=false -m "docs: touch" -- docs/ && git push
-
-# after: same list, no entry for the new SHA
-gh run list --branch "$(git branch --show-current)" --limit 3 --json databaseId,headSha,conclusion
-git log -1 --format=%H   # this SHA appears nowhere above
+gh run list --branch docs/try --limit 5 --json databaseId,headSha,conclusion
+git log -1 --format=%H   # this SHA appears nowhere in the list above
 ```
 
 ## Acceptance criteria status
 
-- [x] Push a docs-only commit: heavy job does not run (no run created — see Half 2)
-- [x] Push a code change: heavy job runs (run `35409277560`, green — see Half 1)
+- [x] Push a docs-only commit: no run is created (Half 2)
+- [x] Push a code change: heavy job runs (run `35409277560`, green — Half 1)
 - [x] README + workflow comment explain the mapping to GitLab `rules:changes`
