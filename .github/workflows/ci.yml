@@ -3,8 +3,16 @@ name: ci
 on:
   push:
     branches: [main]
+    paths:
+      - "src/**"
+      - "tests/**"
+      - ".github/workflows/ci.yml"
   pull_request:
-    branches: [main]
+    branches: [main, "feature/*"]
+    paths:
+      - "src/**"
+      - "tests/**"
+      - ".github/workflows/ci.yml"
 
 # Challenge 1 will teach you to narrow this with paths / if conditions.
 # Challenge 4 will teach you to cache pip correctly.
